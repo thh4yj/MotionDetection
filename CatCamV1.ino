@@ -1,9 +1,14 @@
+#include <avr/sleep.h>
+#include "FSM.h"
+
 // PINS
-#define motionReader = 8;
-#define pingPin = 7; // Trigger Pin of Ultrasonic Sensor
-#define echoPin = 6; // Echo Pin of Ultrasonic Sensor
-#define whiteLed = 9;
-#define greenLed = 10;
+#define motionReader 2
+#define pingPin 7 // Trigger Pin of Ultrasonic Sensor
+#define echoPin 6 // Echo Pin of Ultrasonic Sensor
+#define whiteLed 9
+#define greenLed 10
+
+#define LED 13
 
 // SYSTEM VARIABLES
 int readVal = -1;
@@ -13,9 +18,12 @@ int readVal = -1;
 
 
 void setup() {
+  // pinMode(motionReader, INPUT);
   pinMode(motionReader, INPUT);
   pinMode(whiteLed, OUTPUT);
   pinMode(greenLed, OUTPUT);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
   Serial.begin(115200);
 }
 
@@ -53,13 +61,29 @@ void loop() {
   //   digitalWrite(greenLed, LOW);
   //  }
 
-  readVal = digitalRead(motionReader);
-  digitalWrite(whiteLed, readVal);
+  // readVal = digitalRead(motionReader);
+  // digitalWrite(whiteLed, readVal);
+  delay(5000);
+  sleep();
 
-   
-   
-  // delay(100);
+}
 
+void sleep(){
+  sleep_enable();
+  attachInterrupt(digitalPinToInterrupt(motionReader), wakeUp, RISING );
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  Serial.println("Going to sleep");
+  digitalWrite(LED, LOW);
+  delay(1000);
+  sleep_mode();
+  Serial.println("Just woke up!");
+  digitalWrite(LED, HIGH);
+}
+
+void wakeUp(){
+  Serial.println("Running ISR");
+  sleep_disable();
+  detachInterrupt(0);
 }
 
 long microsecondsToInches(long microseconds) {

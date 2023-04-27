@@ -2,13 +2,15 @@
 #define FSM_H
 
 typedef enum {
-    sleep,
+    sleepState,
     poll,
     detected,
     snooze,
     transition,
     error
 }FSMState;
+
+int motionDetectedFlag;
 
 /*
  * Function to initialize components of the FSM
@@ -28,4 +30,6 @@ FSMState nextStateFunction(FSMState currentState);
  * @return void
  */
 void outputStateFunction(FSMState currentState);
+
+void pollDistanceSensor();
 #endif
