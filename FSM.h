@@ -10,7 +10,9 @@ typedef enum {
     error
 }FSMState;
 
-int motionDetectedFlag;
+bool motionDetectedFlag;
+bool runPolling;
+byte pollCounter;
 
 /*
  * Function to initialize components of the FSM

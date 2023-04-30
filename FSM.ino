@@ -2,7 +2,16 @@
 
 void initFSM() {
   // TODO Initialize pins used in state machine
-  motionDetectedFlag = 0;
+  motionDetectedFlag = false;
+  runPolling = false;
+  pollCounter = 0;
+
+  TCCR1A = 0;           // set entire TCCR1A register to 0
+  TCCR1B = 0;           // same for TCCR1B
+  TCNT1 = 0;            //initialize counter value to 0
+  TCCR1B |= B00000101;  //Prescaler 1024
+  TIMSK1 |= B00000010;
+  OCR1A = 65535;  // ~ 4 seconds
 }
 
 FSMState nextStateFunction(FSMState currentState) {
@@ -26,7 +35,7 @@ FSMState nextStateFunction(FSMState currentState) {
     nextState = transition;
   } else if (currentState == transition) {
     nextState = sleepState;
-    motionDetectedFlag = 0;
+    motionDetectedFlag = false;
   }
 
   // Log the current state
@@ -40,10 +49,10 @@ void outputStateFunction(FSMState currentState) {
     // TODO Implement
     delay(10000);
   } else if (currentState == poll) {
-    // TODO setup timer interupt to exit polling state after 45 seconds (subject to change)
     pollDistanceSensor();
   } else if (currentState == detected) {
     // TODO implement
+
   } else if (currentState == snooze) {
     // Enter low power mode than can be interrupted from button interrupts or timer
 
@@ -51,7 +60,7 @@ void outputStateFunction(FSMState currentState) {
 
     // If snooze button interrupt, wake cpu, add more time to the timer, sleep again
 
-    // If cancel button interrupt, wake cpu 
+    // If cancel button interrupt, wake cpu
   } else if (currentState == transition) {
     // Slow blink 5 times over 5 seconds
   } else {
@@ -61,9 +70,10 @@ void outputStateFunction(FSMState currentState) {
 }
 
 void pollDistanceSensor() {
-  // TODO update to use timer interupt to break infinite polling loop, not for loop
   long duration, inches, cm;
-  for (int i = 0; i < 45; i++) {
+  cli();  // Enable interrupts
+
+  while (runPolling) {
     // Get sensor data
     pinMode(pingPin, OUTPUT);
     digitalWrite(pingPin, LOW);
@@ -83,8 +93,19 @@ void pollDistanceSensor() {
     Serial.println();
 
     if (inches < 7) {
-      motionDetectedFlag = 1;
+      motionDetectedFlag = true;
       return;
     }
+  }
+
+  sei();  // Disable interrupts 
+}
+
+ISR(TIMER1_COMPA_vect) {
+  TCNT1 = 0;  // Reset timer for next interrupt
+  pollCounter += 1;
+  if (pollCounter == 3) {
+    pollCounter = 0;
+    runPolling = false;
   }
 }

@@ -3,12 +3,14 @@
 
 // PINS
 #define motionReader 2
-#define pingPin 7 // Trigger Pin of Ultrasonic Sensor
-#define echoPin 6 // Echo Pin of Ultrasonic Sensor
+#define pingPin 7  // Trigger Pin of Ultrasonic Sensor
+#define echoPin 6  // Echo Pin of Ultrasonic Sensor
 #define whiteLed 9
 #define greenLed 10
 
 #define LED 13
+
+bool LED_STATE = true;
 
 // SYSTEM VARIABLES
 int readVal = -1;
@@ -25,6 +27,13 @@ void setup() {
   pinMode(LED, OUTPUT);
   digitalWrite(LED, HIGH);
   Serial.begin(115200);
+  // cli(); // Enable interrupts
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  // pinMode(led, OUTPUT);
+
+  Serial.println(TCCR1B, BIN);
+  // sei(); // Disable interrupts
 }
 
 void loop() {
@@ -63,14 +72,16 @@ void loop() {
 
   // readVal = digitalRead(motionReader);
   // digitalWrite(whiteLed, readVal);
-  delay(5000);
-  sleep();
-
+  // delay(5000);
+  // sleep();
 }
 
-void sleep(){
+
+
+
+void sleep() {
   sleep_enable();
-  attachInterrupt(digitalPinToInterrupt(motionReader), wakeUp, RISING );
+  attachInterrupt(digitalPinToInterrupt(motionReader), wakeUp, RISING);
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   Serial.println("Going to sleep");
   digitalWrite(LED, LOW);
@@ -80,16 +91,16 @@ void sleep(){
   digitalWrite(LED, HIGH);
 }
 
-void wakeUp(){
+void wakeUp() {
   Serial.println("Running ISR");
   sleep_disable();
-  detachInterrupt(0);
+  detachInterrupt(digitalPinToInterrupt(motionReader));
 }
 
 long microsecondsToInches(long microseconds) {
-   return microseconds / 74 / 2;
+  return microseconds / 74 / 2;
 }
 
 long microsecondsToCentimeters(long microseconds) {
-   return microseconds / 29 / 2;
+  return microseconds / 29 / 2;
 }
